@@ -1,6 +1,16 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "devops-intern-task"
+        DOCKER_USER = "mallikarjuningali"
+        IMAGE_TAG = "latest"
+    }
+
+    triggers {
+        githubPush()
+    }
+
     stages {
 
         stage('Checkout Code') {
@@ -42,7 +52,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                docker build -t devops-intern-task:latest .
+                docker build -t $DOCKER_USER/$IMAGE_NAME:$IMAGE_TAG .
                 '''
             }
         }
@@ -55,9 +65,8 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker tag devops-intern-task:latest $DOCKER_USER/devops-intern-task:latest
-                    docker push $DOCKER_USER/devops-intern-task:latest
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker push $DOCKER_USER/$IMAGE_NAME:$IMAGE_TAG
                     '''
                 }
             }
@@ -68,7 +77,8 @@ pipeline {
                 sh '''
                 docker stop app || true
                 docker rm app || true
-                docker run -d --name app -p 80:8000 $DOCKER_USER/devops-intern-task:latest
+                docker pull $DOCKER_USER/$IMAGE_NAME:$IMAGE_TAG
+                docker run -d --name app -p 80:8000 $DOCKER_USER/$IMAGE_NAME:$IMAGE_TAG
                 '''
             }
         }
