@@ -31,6 +31,8 @@ pipeline {
             steps {
                 sh '''
                 . venv/bin/activate
+		export SECRET_KEY=test-secret-key-for-ci
+		export DEBUG=True
                 python manage.py test
                 '''
             }
